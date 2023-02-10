@@ -6,6 +6,7 @@ import { closePostgresPoolAndClient } from "./database.js";
 
 import AllRoutes from "../routes/AllRoutes.js";
 import CustomersRoutes from "../routes/Customers.js";
+import GamesRoutes from "../routes/Games.js";
 import RentalsRoutes from "../routes/Rentals.js";
 
 dotenv.config();
@@ -30,6 +31,7 @@ async function initializeServer() {
         app.use(express.json());
 
         app.use(CustomersRoutes);
+        app.use(GamesRoutes);
         app.use(RentalsRoutes);
         app.use(AllRoutes);
 
