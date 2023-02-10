@@ -33,20 +33,25 @@ const getPostgresClient = () => {
     return postgresClient;
 };
 
-const closePostgresPoolAndClient = async (callback) => {
-    if (postgresClient) {
-        postgresClient.release();
+const releaseClient = () => {
+    if (postgresClient && postgresPool._clients.length > 0) {
+        postgresClient.release(true);
         postgresClient = null;
     }
+};
+
+const closePostgresPoolAndClient = async (callback) => {
+    releaseClient();
     if (postgresPool) {
         try {
             await postgresPool.end();
             postgresPool = null;
             callback(null);
         } catch (error) {
+            postgresPool = null;
             callback(error);
         }
     }
 };
 
-export { closePostgresPoolAndClient, getPostgresClient, openPostgresClient, openPostgresPool };
+export { closePostgresPoolAndClient, getPostgresClient, openPostgresClient, openPostgresPool, releaseClient };

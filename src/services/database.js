@@ -1,4 +1,4 @@
-import { closePostgresPoolAndClient, openPostgresClient, getPostgresClient, openPostgresPool } from "../config/database.js";
+import { closePostgresPoolAndClient, getPostgresClient, openPostgresClient, openPostgresPool, releaseClient } from "../config/database.js";
 
 async function createDatabaseStructure(database_url_with_db, database_url_default) {
     await openPostgresClient(async (error) => {
@@ -20,7 +20,7 @@ async function createDatabaseStructure(database_url_with_db, database_url_defaul
                                     const b64Decoded = Buffer.from(dbSQL, "base64").toString("utf-8");
                                     try {
                                         await getPostgresClient().query(b64Decoded);
-                                        getPostgresClient().release();
+                                        releaseClient();
                                     } catch (error) {
                                         throw new Error(error);
                                     }
@@ -31,12 +31,14 @@ async function createDatabaseStructure(database_url_with_db, database_url_defaul
                         }
                     });
                 });
+                console.log("Informações do banco postgres criadas com sucesso!");
             } else {
                 throw new Error(error);
             }
-            console.log("Informações do banco postgres criadas com sucesso!");
+        } else {
+            console.log("Banco de dados já inicializado!");
+            releaseClient();
         }
-        console.log("Banco de dados já inicializado!");
     });
 }
 
