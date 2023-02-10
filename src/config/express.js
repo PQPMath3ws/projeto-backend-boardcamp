@@ -4,7 +4,8 @@ import express from "express";
 
 import { closePostgresPoolAndClient } from "./database.js";
 
-import AllRoutesError from "../routes/AllRoutes.js";
+import AllRoutes from "../routes/AllRoutes.js";
+import RentalsRoutes from "../routes/Rentals.js";
 
 dotenv.config();
 
@@ -27,7 +28,8 @@ async function initializeServer() {
         app.use(cors());
         app.use(express.json());
 
-        app.use(AllRoutesError);
+        app.use(RentalsRoutes);
+        app.use(AllRoutes);
 
         server = app.listen(process.env.PORT);
     }
