@@ -8,8 +8,9 @@ async function getGames(req, res) {
         if (error) {
             return res.status(errors["500.1"].code).send(errors["500.1"]);
         }
+        const { name } = req.query;
         try {
-            let query = await getPostgresClient().query(queries.select("*", "games"));
+            let query = await getPostgresClient().query(queries.select("*", "games", name ? `LOWER("name") LIKE LOWER('${name.split(" ")[0]}%')` : null));
             releaseClient();
             return res.status(200).send(query.rows);
         } catch (error) {
