@@ -82,4 +82,48 @@ async function postCustomers(req, res) {
     }
 }
 
-export { getCustomers, getCustomerById, postCustomers };
+async function putCustomerById(req, res) {
+    const { id } = req.params;
+    if (Number.isNaN(Number(id))) {
+        errors[400].message = "invalid customer id format";
+        return res.status(errors[400].code).send(errors[400]);
+    } else {
+        const { name, phone, cpf, birthday } = req.body;
+        const customer = { name, phone, cpf, birthday: new Date(birthday) };
+        const result = await validateCustomerSchema(customer);
+        if (result.status !== "ok") {
+            errors[400].message = result.message;
+            return res.status(errors[400].code).send(errors[400]);
+        } else {
+            await openPostgresClient(async (error) => {
+                if (error) {
+                    return res.status(errors["500.1"].code).send(errors["500.1"]);
+                }
+                try {
+                    const existingCustomerQuery = await getPostgresClient().query(queries.select("*", "customers", `"cpf" = '${cpf}'`));
+                    if (existingCustomerQuery.rows.length > 0) {
+                        if (existingCustomerQuery.rows[0].id.toString() === id) {
+                            await getPostgresClient().query(queries.update("customers", [`"name" = '${customer.name}'`, `"phone" = '${customer.phone}'`, `"cpf" = '${customer.cpf}'`, `"birthday" = '${customer.birthday.toISOString().split("T")[0]}'`], `"id" = ${id}`));
+                            releaseClient();
+                            return res.status(200).send();
+                        } else {
+                            releaseClient();
+                            errors[409].message = "customer with this cpf already registered on database.";
+                            return res.status(errors[409].code).send(errors[409]);
+                        }
+                    } else {
+                        await getPostgresClient().query(queries.update("customers", [`"name" = '${customer.name}'`, `"phone" = '${customer.phone}'`, `"cpf" = '${customer.cpf}'`, `"birthday" = '${customer.birthday.toISOString().split("T")[0]}'`], `"id" = ${id}`));
+                        releaseClient();
+                        return res.status(200).send();
+                    }
+                } catch (error) {
+                    releaseClient();
+                    return res.status(errors["500.2"].code).send(errors["500.2"]);
+                }
+            });
+        }
+    }
+    return;
+}
+
+export { getCustomers, getCustomerById, postCustomers, putCustomerById };
