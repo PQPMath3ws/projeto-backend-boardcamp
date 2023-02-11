@@ -25,7 +25,7 @@ async function getGames(req, res) {
 
 async function postGames(req, res) {
     const { name, image, stockTotal, pricePerDay } = req.body;
-    const game = { name, image, stockTotal, pricePerDay };
+    const game = { name, image, stockTotal: Number.parseInt(stockTotal), pricePerDay: Number.parseInt(pricePerDay) };
     const result = await validateGameSchema(game);
     if (result.status !== "ok") {
         errors[400].message = result.message;
@@ -42,7 +42,7 @@ async function postGames(req, res) {
                     errors[409].message = "game already registered on database.";
                     return res.status(errors[409].code).send(errors[409]);
                 } else {
-                    await getPostgresClient().query(queries.insert("games", `"name", "image", "stockTotal", "pricePerDay"`, [name, image, stockTotal, pricePerDay]));
+                    await getPostgresClient().query(queries.insert("games", `"name", "image", "stockTotal", "pricePerDay"`, [game.name, game.image, game.stockTotal, game.pricePerDay]));
                     releaseClient();
                     return res.status(201).send();
                 }
