@@ -91,6 +91,49 @@ async function postRentals(req, res) {
     return;
 }
 
+async function postRentalsReturn(req, res) {
+    const { id } = req.params;
+    if (Number.isNaN(Number(id))) {
+        errors[400].message = "invalid rental id format";
+        return res.status(errors[400].code).send(errors[400]);
+    } else {
+        await openPostgresClient(async (error) => {
+            if (error) {
+                return res.status(errors["500.1"].code).send(errors["500.1"]);
+            }
+            try {
+                const existingRentalQuery = await getPostgresClient().query(queries.select("*", "rentals", `"id" = ${Number.parseInt(id)}`));
+                if (existingRentalQuery.rows.length === 0) {
+                    releaseClient();
+                    errors["404.2"].message = "rental not found";
+                    return res.status(errors["404.2"].code).send(errors["404.2"]);
+                } else {
+                    if (existingRentalQuery.rows[0].returnDate) {
+                        releaseClient();
+                        errors[400].message = "rental already returned";
+                        return res.status(errors[400].code).send(errors[400]);
+                    } else {
+                        const returnDate = new Date();
+                        let delayFee = null;
+                        const difference = new Date(returnDate.getTime() - existingRentalQuery.rows[0].rentDate.getTime());
+                        if (difference.getDate() > existingRentalQuery.rows[0].daysRented) {
+                            const existingGameQuery = await getPostgresClient().query(queries.select(`"pricePerDay"`, "games", `"id" = ${existingRentalQuery.rows[0].gameId}`));
+                            delayFee = existingGameQuery.rows[0].pricePerDay * (difference.getDate() - existingRentalQuery.rows[0].daysRented);
+                        }
+                        await getPostgresClient().query(queries.update("rentals", [`"returnDate" = '${returnDate.toISOString().split("T")[0]}'`, `"delayFee" = ${delayFee}`], `"id" = ${id}`));
+                        releaseClient();
+                        return res.status(200).send();
+                    }
+                }
+            } catch (error) {
+                releaseClient();
+                return res.status(errors["500.2"].code).send(errors["500.2"]);
+            }
+        });
+    }
+    return;
+}
+
 async function deleteRentals(req, res) {
     const { id } = req.params;
     if (Number.isNaN(Number(id))) {
@@ -127,4 +170,4 @@ async function deleteRentals(req, res) {
     return;
 }
 
-export { deleteRentals, getRentals, postRentals };
+export { deleteRentals, getRentals, postRentals, postRentalsReturn };
