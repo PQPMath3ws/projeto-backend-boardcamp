@@ -91,4 +91,40 @@ async function postRentals(req, res) {
     return;
 }
 
-export { getRentals, postRentals };
+async function deleteRentals(req, res) {
+    const { id } = req.params;
+    if (Number.isNaN(Number(id))) {
+        errors[400].message = "invalid rental id format";
+        return res.status(errors[400].code).send(errors[400]);
+    } else {
+        await openPostgresClient(async (error) => {
+            if (error) {
+                return res.status(errors["500.1"].code).send(errors["500.1"]);
+            }
+            try {
+                const existingRentalQuery = await getPostgresClient().query(queries.select("*", "rentals", `"id" = ${Number.parseInt(id)}`));
+                if (existingRentalQuery.rows.length === 0) {
+                    releaseClient();
+                    errors["404.2"].message = "rental not found";
+                    return res.status(errors["404.2"].code).send(errors["404.2"]);
+                } else {
+                    if (!existingRentalQuery.rows[0].returnDate) {
+                        releaseClient();
+                        errors[400].message = "rental not returned yet";
+                        return res.status(errors[400].code).send(errors[400]);
+                    } else {
+                        await getPostgresClient().query(queries.delete("rentals", `"id" = ${Number.parseInt(id)}`));
+                        releaseClient();
+                        return res.status(200).send();
+                    }
+                }
+            } catch (error) {
+                releaseClient();
+                return res.status(errors["500.2"].code).send(errors["500.2"]);
+            }
+        });
+    }
+    return;
+}
+
+export { deleteRentals, getRentals, postRentals };
