@@ -24,7 +24,7 @@ async function getGames(req, res) {
 }
 
 async function postGames(req, res) {
-    let { name, image, stockTotal, pricePerDay } = req.body;
+    const { name, image, stockTotal, pricePerDay } = req.body;
     const game = { name, image, stockTotal, pricePerDay };
     const result = await validateGameSchema(game);
     if (result.status !== "ok") {
@@ -47,7 +47,6 @@ async function postGames(req, res) {
                     return res.status(201).send();
                 }
             } catch (error) {
-                console.log(error);
                 releaseClient();
                 return res.status(errors["500.2"].code).send(errors["500.2"]);
             }
