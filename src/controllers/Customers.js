@@ -8,8 +8,9 @@ async function getCustomers(req, res) {
         if (error) {
             return res.status(errors["500.1"].code).send(errors["500.1"]);
         }
+        const { cpf } = req.query;
         try {
-            let query = await getPostgresClient().query(queries.select("*", "customers"));
+            let query = await getPostgresClient().query(queries.select("*", "customers", cpf ? `"cpf" LIKE '${cpf.split(" ")[0]}%'` : null));
             releaseClient();
             return res.status(200).send(query.rows);
         } catch (error) {
