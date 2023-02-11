@@ -10,9 +10,9 @@ async function getRentals(req, res) {
         if (error) {
             return res.status(errors["500.1"].code).send(errors["500.1"]);
         }
-        const { status } = req.query;
+        const { startDate, status } = req.query;
         try {
-            const query = await getPostgresClient().query(queries.select("*", "rentals", status === "open" ? `"returnDate" IS NULL` : status === "closed" ? `"returnDate" IS NOT NULL` : null));
+            const query = await getPostgresClient().query(queries.select("*", "rentals", status === "open" ? `"returnDate" IS NULL` : status === "closed" ? `"returnDate" IS NOT NULL` : startDate && new Date(startDate) instanceof Date && !isNaN(new Date(startDate)) ? `"rentDate" >= '${startDate}'::date` : null));
             const gamesQuery = await getPostgresClient().query(queries.select("*", "games"));
             const costumersQuery = await getPostgresClient().query(queries.select("*", "customers"));
             query.rows.forEach(row => {
