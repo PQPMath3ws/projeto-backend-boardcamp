@@ -10,9 +10,10 @@ async function getCustomers(req, res) {
         if (error) {
             return res.status(errors["500.1"].code).send(errors["500.1"]);
         }
-        const { cpf } = req.query;
+        const { cpf, desc, order } = req.query;
         try {
-            const query = await getPostgresClient().query(queries.select("*", "customers", cpf ? `"cpf" LIKE '${cpf.split(" ")[0]}%'` : null));
+            const allowedFieldsToOrder = ["name", "phone", "birthday"];
+            const query = await getPostgresClient().query(queries.select("*", "customers", cpf ? `"cpf" LIKE '${cpf.split(" ")[0]}%'` : null, order && allowedFieldsToOrder.includes(order) ? order : null, order && allowedFieldsToOrder.includes(order) && desc === "true" ? "DESC" : order && allowedFieldsToOrder.includes(order) ? "ASC" : null));
             releaseClient();
             return res.status(200).send(query.rows);
         } catch (error) {
