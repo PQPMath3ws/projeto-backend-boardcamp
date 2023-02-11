@@ -14,6 +14,7 @@ async function getCustomers(req, res) {
             releaseClient();
             return res.status(200).send(query.rows);
         } catch (error) {
+            releaseClient();
             return res.status(errors["500.2"].code).send(errors["500.2"]);
         }
     });
