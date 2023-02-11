@@ -3,6 +3,8 @@ import { getPostgresClient, openPostgresClient, releaseClient } from "../config/
 import errors from "../const/errors.js";
 import queries from "../const/queries.js";
 
+import { validateCustomerSchema } from "../schemas/CustomerSchema.js";
+
 async function getCustomers(req, res) {
     await openPostgresClient(async (error) => {
         if (error) {
@@ -49,4 +51,35 @@ async function getCustomerById(req, res) {
     return;
 }
 
-export { getCustomers, getCustomerById };
+async function postCustomers(req, res) {
+    const { name, phone, cpf, birthday } = req.body;
+    const customer = { name, phone, cpf, birthday: new Date(birthday) };
+    const result = await validateCustomerSchema(customer);
+    if (result.status !== "ok") {
+        errors[400].message = result.message;
+        return res.status(errors[400].code).send(errors[400]);
+    } else {
+        await openPostgresClient(async (error) => {
+            if (error) {
+                return res.status(errors["500.1"].code).send(errors["500.1"]);
+            }
+            try {
+                const existingCustomerQuery = await getPostgresClient().query(queries.select("*", "customers", `"cpf" = '${cpf}'`));
+                if (existingCustomerQuery.rows.length > 0) {
+                    releaseClient();
+                    errors[409].message = "customer with this cpf already registered on database.";
+                    return res.status(errors[409].code).send(errors[409]);
+                } else {
+                    await getPostgresClient().query(queries.insert("customers", `"name", "phone", "cpf", "birthday"`, [customer.name, customer.phone, customer.cpf, customer.birthday.toISOString()]));
+                    releaseClient();
+                    return res.status(201).send();
+                }
+            } catch (error) {
+                releaseClient();
+                return res.status(errors["500.2"].code).send(errors["500.2"]);
+            }
+        });
+    }
+}
+
+export { getCustomers, getCustomerById, postCustomers };
