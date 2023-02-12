@@ -12,7 +12,7 @@ async function getGames(req, res) {
         }
         const { desc, limit, name, offset, order } = req.query;
         try {
-            const allowedFieldsToOrder = ["id", "name", "stockTotal", "pricePerDay"];
+            const allowedFieldsToOrder = ["id", "image", "name", "stockTotal", "pricePerDay"];
             const query = await getPostgresClient().query(queries.select("*", "games", name ? `LOWER("name") LIKE LOWER('${name.split(" ")[0]}%')` : null, order && allowedFieldsToOrder.includes(order) ? order : null, order && allowedFieldsToOrder.includes(order) && desc === "true" ? "DESC" : order && allowedFieldsToOrder.includes(order) ? "ASC" : null, !Number.isNaN(Number(limit)) ? Number.parseInt(limit) : null, !Number.isNaN(Number(offset)) ? Number.parseInt(offset) : null));
             releaseClient();
             return res.status(200).send(query.rows);

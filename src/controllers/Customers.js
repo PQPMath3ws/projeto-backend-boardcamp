@@ -12,7 +12,7 @@ async function getCustomers(req, res) {
         }
         const { cpf, desc, limit, offset, order } = req.query;
         try {
-            const allowedFieldsToOrder = ["id", "name", "phone", "birthday"];
+            const allowedFieldsToOrder = ["id", "birthday", "cpf", "name", "phone"];
             const query = await getPostgresClient().query(queries.select("*", "customers", cpf && !Number.isNaN(Number(cpf)) ? `"cpf" LIKE '${cpf}%'` : null, order && allowedFieldsToOrder.includes(order) ? order : null, order && allowedFieldsToOrder.includes(order) && desc === "true" ? "DESC" : order && allowedFieldsToOrder.includes(order) ? "ASC" : null, !Number.isNaN(Number(limit)) ? Number.parseInt(limit) : null, !Number.isNaN(Number(offset)) ? Number.parseInt(offset) : null));
             releaseClient();
             return res.status(200).send(query.rows);
