@@ -8,7 +8,7 @@ import { openPostgresPool } from "./config/database.js";
 
 (async function initialize() {
     openPostgresPool(process.env.DATABASE_URL);
-    await createDatabaseStructure(process.env.DATABASE_URL, process.env.DATABASE_URL_DEFAULT);
+    await createDatabaseStructure(process.env.DATABASE_URL);
     await initializeServer();
     console.log("Servidor inicializado com sucesso!");
 })();

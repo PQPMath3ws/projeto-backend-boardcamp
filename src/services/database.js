@@ -1,12 +1,12 @@
 import { closePostgresPoolAndClient, getPostgresClient, openPostgresClient, openPostgresPool, releaseClient } from "../config/database.js";
 
-async function createDatabaseStructure(database_url_with_db, database_url_default) {
+async function createDatabaseStructure(database_url_with_db) {
     await openPostgresClient(async (error) => {
         if (error) {
             if (error.code === "3D000") {
                 await closePostgresPoolAndClient(async (error) => {
                     if (error) throw new Error(error);
-                    openPostgresPool(database_url_default);
+                    openPostgresPool(`${database_url_with_db.substring(0, database_url_with_db.length - 9)}postgres`);
                     await openPostgresClient(async (error) => {
                         if (error) throw new Error(error);
                         try {
