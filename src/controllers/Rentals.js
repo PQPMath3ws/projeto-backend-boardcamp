@@ -12,7 +12,7 @@ async function getRentals(req, res) {
         }
         const { customerId, desc, gameId, limit, offset, order, startDate, status } = req.query;
         try {
-            const allowedFieldsToOrder = ["rentDate", "daysRented", "returnDate", "originalPrice", "delayFee"];
+            const allowedFieldsToOrder = ["id", "rentDate", "daysRented", "returnDate", "originalPrice", "delayFee"];
             const query = await getPostgresClient().query(queries.select("*", "rentals", customerId && !Number.isNaN(Number(customerId)) ? `"id" = ${customerId}` : status === "open" ? `"returnDate" IS NULL` : status === "closed" ? `"returnDate" IS NOT NULL` : startDate && new Date(startDate) instanceof Date && !isNaN(new Date(startDate)) ? `"rentDate" >= '${startDate}'::date` : gameId && !Number.isNaN() ? `"gameId" = ${Number.parseInt(gameId)}` : null, order && allowedFieldsToOrder.includes(order) ? order : null, order && allowedFieldsToOrder.includes(order) && desc === "true" ? "DESC" : order && allowedFieldsToOrder.includes(order) ? "ASC" : null, !Number.isNaN(Number(limit)) ? Number.parseInt(limit) : null, !Number.isNaN(Number(offset)) ? Number.parseInt(offset) : null));
             const gamesQuery = await getPostgresClient().query(queries.select(`"id", "name"`, "games"));
             const costumersQuery = await getPostgresClient().query(queries.select(`"id", "name"`, "customers"));
