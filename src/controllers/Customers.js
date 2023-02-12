@@ -13,7 +13,7 @@ async function getCustomers(req, res) {
         const { cpf, desc, limit, offset, order } = req.query;
         try {
             const allowedFieldsToOrder = ["name", "phone", "birthday"];
-            const query = await getPostgresClient().query(queries.select("*", "customers", cpf ? `"cpf" LIKE '${cpf.split(" ")[0]}%'` : null, order && allowedFieldsToOrder.includes(order) ? order : null, order && allowedFieldsToOrder.includes(order) && desc === "true" ? "DESC" : order && allowedFieldsToOrder.includes(order) ? "ASC" : null, !Number.isNaN(Number(limit)) ? Number.parseInt(limit) : null, !Number.isNaN(Number(offset)) ? Number.parseInt(offset) : null));
+            const query = await getPostgresClient().query(queries.select("*", "customers", cpf && !Number.isNaN(Number(cpf)) ? `"cpf" LIKE '${cpf}%'` : null, order && allowedFieldsToOrder.includes(order) ? order : null, order && allowedFieldsToOrder.includes(order) && desc === "true" ? "DESC" : order && allowedFieldsToOrder.includes(order) ? "ASC" : null, !Number.isNaN(Number(limit)) ? Number.parseInt(limit) : null, !Number.isNaN(Number(offset)) ? Number.parseInt(offset) : null));
             releaseClient();
             return res.status(200).send(query.rows);
         } catch (error) {
@@ -53,7 +53,7 @@ async function getCustomerById(req, res) {
 }
 
 async function postCustomers(req, res) {
-    const { name, phone, cpf, birthday } = req.body;
+    const { birthday, cpf, name, phone } = req.body;
     const customer = { name, phone, cpf, birthday: new Date(birthday) };
     const result = await validateCustomerSchema(customer);
     if (result.status !== "ok") {
