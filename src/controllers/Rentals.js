@@ -14,8 +14,8 @@ async function getRentals(req, res) {
         try {
             const allowedFieldsToOrder = ["rentDate", "daysRented", "returnDate", "originalPrice", "delayFee"];
             const query = await getPostgresClient().query(queries.select("*", "rentals", customerId && !Number.isNaN(Number(customerId)) ? `"id" = ${customerId}` : status === "open" ? `"returnDate" IS NULL` : status === "closed" ? `"returnDate" IS NOT NULL` : startDate && new Date(startDate) instanceof Date && !isNaN(new Date(startDate)) ? `"rentDate" >= '${startDate}'::date` : null, order && allowedFieldsToOrder.includes(order) ? order : null, order && allowedFieldsToOrder.includes(order) && desc === "true" ? "DESC" : order && allowedFieldsToOrder.includes(order) ? "ASC" : null, !Number.isNaN(Number(limit)) ? Number.parseInt(limit) : null, !Number.isNaN(Number(offset)) ? Number.parseInt(offset) : null));
-            const gamesQuery = await getPostgresClient().query(queries.select("*", "games"));
-            const costumersQuery = await getPostgresClient().query(queries.select("*", "customers"));
+            const gamesQuery = await getPostgresClient().query(queries.select(`"id", "name"`, "games"));
+            const costumersQuery = await getPostgresClient().query(queries.select(`"id", "name"`, "customers"));
             query.rows.forEach(row => {
                 row.customer = costumersQuery.rows.find(customerRow => row.customerId === customerRow.id);
                 row.game = gamesQuery.rows.find(gameRow => row.gameId === gameRow.id);
