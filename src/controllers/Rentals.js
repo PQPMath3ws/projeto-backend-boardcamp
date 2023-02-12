@@ -116,10 +116,11 @@ async function postRentalsReturn(req, res) {
                     } else {
                         const returnDate = new Date();
                         let delayFee = null;
-                        const difference = new Date(returnDate.getTime() - existingRentalQuery.rows[0].rentDate.getTime());
-                        if (difference.getDate() > existingRentalQuery.rows[0].daysRented) {
+                        const differenceInMs = new Date(returnDate) - new Date(existingRentalQuery.rows[0].rentDate);
+                        const differenceInDays = Number.parseInt(differenceInMs / (1000 * 60 * 60 * 24));
+                        if (differenceInDays > existingRentalQuery.rows[0].daysRented) {
                             const existingGameQuery = await getPostgresClient().query(queries.select(`"pricePerDay"`, "games", `"id" = ${existingRentalQuery.rows[0].gameId}`));
-                            delayFee = existingGameQuery.rows[0].pricePerDay * (difference.getDate() - existingRentalQuery.rows[0].daysRented);
+                            delayFee = existingGameQuery.rows[0].pricePerDay * (differenceInDays - existingRentalQuery.rows[0].daysRented);
                         }
                         await getPostgresClient().query(queries.update("rentals", [`"returnDate" = '${returnDate.toISOString().split("T")[0]}'`, `"delayFee" = ${delayFee}`], `"id" = ${id}`));
                         releaseClient();
