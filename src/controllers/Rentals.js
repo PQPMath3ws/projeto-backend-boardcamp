@@ -71,7 +71,7 @@ async function postRentals(req, res) {
                             return res.status(errors[400].code).send(errors[400]);
                         } else {
                             const existingRentalsQuery = await getPostgresClient().query(queries.select("*", "rentals", `"gameId" = ${Number.parseInt(gameId)} AND "returnDate" IS NULL`));
-                            if (existingRentalsQuery.rows.length > gameQuery.rows[0].stockTotal) {
+                            if (existingRentalsQuery.rows.length >= gameQuery.rows[0].stockTotal) {
                                 releaseClient();
                                 errors[400].message = "game out of stock to rent";
                                 return res.status(errors[400].code).send(errors[400]);
