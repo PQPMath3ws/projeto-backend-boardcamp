@@ -19,8 +19,6 @@ async function getRentals(req, res) {
             query.rows.forEach(row => {
                 row.customer = costumersQuery.rows.find(customerRow => row.customerId === customerRow.id);
                 row.game = gamesQuery.rows.find(gameRow => row.gameId === gameRow.id);
-                delete row.customerId;
-                delete row.gameId;
             });
             releaseClient();
             return res.status(200).send(query.rows);
